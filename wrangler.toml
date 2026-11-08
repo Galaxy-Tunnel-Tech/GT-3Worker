@@ -1,0 +1,10 @@
+name = "galaxytunnel"
+pages_build_output_dir = "." # _worker.js ရှိသည့် Directory (Root ဖြစ်လျှင် ".")
+
+compatibility_date = "2024-03-20"
+compatibility_flags = [ "nodejs_compat" ]
+[vars]
+WS_PATH = "galaxy-tunnel"
+PROXYIP = "cdn.xn--b6gac.eu.org"
+UUID = "646c863d-0451-4fad-b26e-6836723a0fbb"
+DNS_RESOLVER_URL = ["https://cloudflare-dns.com/dns-query","https://dns.google.com/dns-query"]
