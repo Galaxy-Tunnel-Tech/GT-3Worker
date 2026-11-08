@@ -6,6 +6,9 @@ import { connect } from "cloudflare:sockets";
 const DEFAULT_LOCAL_PROXIES = [
   "bpb.yousef.isegaro.com",
   "galaxytunnel.cloud-ip.cc",
+  "icook.tw",
+  "www.visa.com.sg"
+];
 
 const DEFAULT_DOH_URL = ["https://cloudflare-dns.com/dns-query","https://dns.google/dns-query","https://dns.quad9.net/dns-query","https://dns.adguard-dns.com/dns-query"];
 const CONNECTION_TIMEOUT_MS = 30000; // 30 seconds timeout
@@ -393,570 +396,182 @@ function isValidUUID(uuid) {
 // ============================================
 // HTML UI PAGES WITH NOINDEX META (Item 1, 11, 12)
 // ============================================
-function getGalaxyPage(data = {}) {
-  const {
-    host = "localhost",
-    uuid = "",
-    wsPath = "galaxy-tunnel",
-    proxyIP = "",
-    configs = {},
-    clientIp = "127.0.0.1",
-    colo = "EDGE-GLOBAL"
-  } = data;
-
-  const subUrl = `https://${host}/sub`;
-  const vlessTls = configs.tls || `vless://${uuid}@${host}:443?encryption=none&security=tls&sni=${host}&type=ws&host=${host}&path=%2F${wsPath}%3Fed%3D2048#Galaxy-TLS`;
-  const vlessHttp = configs.http || `vless://${uuid}@${host}:8080?encryption=none&security=none&type=ws&host=${host}&path=%2F${wsPath}%3Fed%3D2048#Galaxy-WS-8080`;
-  const trojanTls = configs.trojan || (uuid ? `trojan://${uuid}@${host}:443?security=tls&sni=${host}&type=ws&host=${host}&path=%2F${wsPath}%3Fed%3D2048#Galaxy-Trojan` : "");
-
+function getGalaxyPage() {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
-  <title>Galaxy Tunnel - VLESS Configuration</title>
-  
-  <!-- Sci-Fi Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@1,700;1,800&family=JetBrains+Mono:wght@400;500&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+  <title>Galaxy-Tunnel VLESS</title>
   <style>
-    :root {
-      --bg: #000612;
-      --card-bg: rgba(6, 14, 29, 0.75);
-      --cyan-glow: #00d2ff;
-      --border-blue: rgba(0, 160, 255, 0.45);
-      --text-white: #ffffff;
-      --text-muted: #6e84a3;
-      --font-main: 'Rajdhani', sans-serif;
-      --font-tech: 'Chakra Petch', sans-serif;
-      --font-code: 'JetBrains Mono', monospace;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); }
-
-    body {
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(ellipse 60% 40% at 50% 10%, rgba(0, 102, 255, 0.22), transparent),
-        radial-gradient(circle at 95% 45%, rgba(0, 210, 255, 0.1), transparent 50%),
-        radial-gradient(circle at 5% 75%, rgba(138, 43, 226, 0.12), transparent 45%);
-      color: var(--text-white);
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html {
+      width: 100%; height: 100%;
+      background: #02060d; overflow: hidden;
+      font-family: 'Segoe UI', Arial, sans-serif;
       display: flex; justify-content: center; align-items: center;
-      min-height: 100vh; padding: 25px 15px;
     }
-
-    .app-container {
-      width: 100%; max-width: 880px;
-      display: flex; flex-direction: column; gap: 16px;
+    .space-bg {
+      position: absolute; width: 100%; height: 100%;
+      background: 
+        radial-gradient(circle at 50% 35%, rgba(10, 45, 80, 0.7) 0%, transparent 65%),
+        radial-gradient(circle at 80% 80%, rgba(0, 150, 200, 0.15) 0%, transparent 50%),
+        #02060d;
+      z-index: 1;
     }
-
-    .header {
-      display: flex; justify-content: space-between; align-items: center; padding: 0 4px;
+    .starfield {
+      position: absolute; width: 100%; height: 100%;
+      background-image: 
+        radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 40px 70px, rgba(0,212,255,0.8), rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 90px 40px, #ffffff, rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 160px 120px, rgba(0,212,255,0.9), rgba(0,0,0,0));
+      background-repeat: repeat; background-size: 220px 220px;
+      animation: starTwinkle 4s ease-in-out infinite alternate; opacity: 0.6;
     }
-
-    .brand {
-      display: flex; align-items: center; gap: 14px; cursor: pointer;
+    @keyframes starTwinkle {
+      0% { opacity: 0.4; transform: scale(1); }
+      100% { opacity: 0.8; transform: scale(1.02); }
     }
-
-    .brand-logo {
-      width: 44px; height: 44px;
-      border: 1.5px solid rgba(0, 210, 255, 0.5);
-      border-radius: 12px;
-      background: radial-gradient(circle, rgba(0, 170, 255, 0.25) 0%, rgba(0, 10, 30, 0.8) 100%);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 15px rgba(0, 180, 255, 0.35);
+    .card-frame {
+      position: relative; z-index: 10;
+      width: 90vw; max-width: 480px; aspect-ratio: 1 / 1;
+      background: rgba(4, 12, 24, 0.75);
+      border: 1.5px solid rgba(0, 212, 255, 0.6);
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.25), inset 0 0 25px rgba(0, 212, 255, 0.1);
+      backdrop-filter: blur(12px);
+      display: flex; flex-direction: column; justify-content: space-between; align-items: center;
+      padding: 35px 25px 25px 25px; border-radius: 4px;
     }
-
-    .brand-logo i { color: #5eead4; font-size: 20px; filter: drop-shadow(0 0 6px #00f2fe); }
-    .brand-title h2 { font-size: 1.25rem; font-weight: 700; }
-    .brand-title p { font-size: 0.85rem; color: var(--text-muted); }
-
-    .status-badge {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(16, 185, 129, 0.08);
-      border: 1px solid rgba(52, 211, 153, 0.35);
-      padding: 6px 18px; border-radius: 25px;
-      font-size: 0.9rem; font-weight: 700; color: #34d399;
+    .graphic-container {
+      position: relative; width: 230px; height: 230px;
+      display: flex; justify-content: center; align-items: center;
     }
-
-    .status-dot {
-      width: 7px; height: 7px; background: #10b981;
-      border-radius: 50%; box-shadow: 0 0 8px #10b981;
+    .ring {
+      position: absolute; width: 240px; height: 75px;
+      border: 2px solid rgba(0, 230, 255, 0.85); border-radius: 50%;
+      transform: rotate(-28deg);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.8), inset 0 0 15px rgba(0, 212, 255, 0.5);
+      pointer-events: none; animation: ringGlow 3s ease-in-out infinite alternate;
     }
-
-    /* Top Tabs */
-    .nav-bar {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 110px;
-      gap: 12px;
+    @keyframes ringGlow {
+      0% { opacity: 0.7; box-shadow: 0 0 12px rgba(0,212,255,0.6); }
+      100% { opacity: 1; box-shadow: 0 0 25px rgba(0,212,255,1); }
     }
-
-    .nav-card {
-      background: rgba(8, 20, 42, 0.5);
-      border: 1px solid rgba(0, 170, 255, 0.35);
-      border-radius: 12px; padding: 10px 12px;
-      display: flex; align-items: center; justify-content: center;
-      gap: 10px; cursor: pointer; backdrop-filter: blur(8px);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      transition: all 0.25s ease; user-select: none;
+    canvas { position: absolute; top: 0; left: 0; }
+    .content-bottom {
+      width: 100%; display: flex; flex-direction: column; align-items: center;
+      text-align: center; position: relative;
     }
-
-    .nav-card:hover {
-      border-color: var(--cyan-glow);
-      box-shadow: 0 0 14px rgba(0, 210, 255, 0.35);
+    .title {
+      font-size: 34px; font-weight: 900; font-style: italic;
+      color: #ffffff; letter-spacing: 2px; text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.7); line-height: 1.1;
     }
-
-    .nav-card.active {
-      border-color: var(--cyan-glow);
-      background: rgba(0, 210, 255, 0.16);
-      box-shadow: 0 0 16px rgba(0, 210, 255, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    .subtitle {
+      font-size: 16px; font-weight: 600; color: #7b93a7;
+      letter-spacing: 5px; margin-top: 6px; text-transform: uppercase;
     }
-
-    .nav-card i { font-size: 1.15rem; color: #00d2ff; }
-    .nav-card span { font-size: 0.92rem; font-weight: 700; }
-
-    .nav-exit { border-color: rgba(244, 63, 94, 0.35); }
-    .nav-exit i { color: #f43f5e; }
-    .nav-exit:hover {
-      border-color: #f43f5e;
-      box-shadow: 0 0 15px rgba(244, 63, 94, 0.4);
+    .access-badge {
+      align-self: flex-end; margin-top: 15px; font-size: 20px;
+      font-weight: 900; font-style: italic; color: #00e5ff;
+      text-transform: uppercase; text-align: right; letter-spacing: 1px; line-height: 1.1;
+      text-shadow: 0 0 15px rgba(0, 229, 255, 0.85); animation: statusPulse 2s infinite alternate;
     }
-
-    /* Panels */
-    .tab-panel {
-      display: none;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-
-    .tab-panel.active { display: block; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Hero Card */
-    .hero-card {
-      background: radial-gradient(circle at 80% 50%, rgba(0, 110, 255, 0.15), transparent 60%),
-                  linear-gradient(180deg, rgba(8, 24, 52, 0.75) 0%, rgba(3, 11, 24, 0.9) 100%);
-      border: 1px solid rgba(0, 180, 255, 0.45);
-      border-radius: 16px; padding: 28px 36px;
-      display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 0 25px rgba(0, 120, 255, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.25);
-    }
-
-    .hero-left h1 {
-      font-family: var(--font-tech); font-size: 2.2rem;
-      font-style: italic; font-weight: 800; letter-spacing: 1.5px;
-      text-transform: uppercase; text-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
-    }
-
-    .hero-left .sub-title {
-      font-size: 0.95rem; letter-spacing: 6px; color: #9cb5d6;
-      font-weight: 700; margin-bottom: 20px;
-    }
-
-    .hero-left .tag-access {
-      font-family: var(--font-tech); font-style: italic;
-      color: #00e5ff; font-weight: 800; font-size: 1.05rem; letter-spacing: 1px;
-      text-shadow: 0 0 12px rgba(0, 229, 255, 0.6);
-    }
-
-    .hero-right { width: 320px; height: 140px; }
-
-    .home-stats-grid {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 14px; margin-top: 16px;
-    }
-
-    .stat-card {
-      background: rgba(5, 14, 30, 0.7);
-      border: 1px solid rgba(0, 180, 255, 0.25);
-      border-radius: 12px; padding: 16px; text-align: center;
-    }
-
-    .stat-card h4 {
-      color: var(--text-muted); font-size: 0.82rem; margin-bottom: 6px;
-    }
-
-    .stat-card p {
-      font-size: 1.25rem; font-weight: 700; color: var(--cyan-glow);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    /* Container Box */
-    .glass-container {
-      background: rgba(5, 14, 30, 0.7);
-      border: 1px solid rgba(0, 180, 255, 0.35);
-      border-radius: 16px; padding: 22px;
-      box-shadow: 0 0 30px rgba(0, 120, 255, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-    }
-
-    .section-title-bar {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
-    }
-
-    .title-group {
-      display: flex; align-items: center; gap: 12px; font-size: 1.2rem; font-weight: 700;
-    }
-
-    .rocket-icon { font-size: 1.35rem; color: #ff6b6b; }
-
-    /* Node Row Cards */
-    .node-row {
-      background: rgba(3, 9, 20, 0.95);
-      border: 1px solid rgba(0, 140, 255, 0.25);
-      border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 16px;
-    }
-
-    .node-meta {
-      width: 195px; display: flex; align-items: center; gap: 14px; flex-shrink: 0;
-    }
-
-    .node-meta-icon { font-size: 1.45rem; width: 28px; text-align: center; }
-    .icon-cyan { color: #00e5ff; }
-    .icon-yellow { color: #fbbf24; }
-    .icon-purple { color: #a855f7; }
-
-    .node-meta-text h3 { font-size: 1.05rem; font-weight: 700; }
-    .node-meta-text span { font-size: 0.8rem; color: var(--text-muted); }
-
-    .code-box {
-      flex: 1; background: #01040b;
-      border: 1px solid rgba(0, 150, 255, 0.2);
-      border-radius: 8px; padding: 8px 12px;
-      font-family: var(--font-code); font-size: 0.74rem; line-height: 1.35;
-      color: #7995b8; word-break: break-all; max-height: 54px; overflow-y: auto;
-      box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8);
-    }
-
-    .button-group { display: flex; align-items: center; flex-shrink: 0; }
-
-    .btn-main {
-      background: linear-gradient(180deg, #1b66be 0%, #0c4383 100%);
-      border: 1px solid #257ae2; color: #ffffff;
-      font-size: 0.86rem; font-weight: 700; padding: 8px 16px;
-      border-radius: 8px 0 0 8px; cursor: pointer; transition: 0.2s;
-    }
-
-    .btn-main:hover { background: #2476d8; }
-
-    .btn-arrow {
-      background: linear-gradient(180deg, #1b66be 0%, #0c4383 100%);
-      border: 1px solid #257ae2; border-left: none; color: #ffffff;
-      padding: 8px 11px; font-size: 0.8rem; border-radius: 0 8px 8px 0; cursor: pointer;
-    }
-
-    .btn-arrow:hover { background: #2476d8; }
-    .btn-single { border-radius: 8px !important; border-right: 1px solid #257ae2 !important; }
-
-    .compatibility {
-      text-align: center; color: #6882a4; font-size: 0.85rem; font-weight: 600;
-      margin-top: 18px; display: flex; align-items: center; justify-content: center; gap: 7px;
-    }
-
-    .diag-item {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 14px 18px; background: rgba(3, 9, 20, 0.8);
-      border: 1px solid rgba(0, 180, 255, 0.2); border-radius: 10px; margin-bottom: 12px;
-    }
-
-    .btn-ping {
-      background: linear-gradient(180deg, #00c6ff, #0072ff);
-      border: none; color: white; padding: 8px 20px;
-      border-radius: 8px; cursor: pointer; font-weight: 700;
-    }
-
-    @media (max-width: 768px) {
-      .nav-bar { grid-template-columns: repeat(2, 1fr); }
-      .hero-card { flex-direction: column; align-items: flex-start; }
-      .hero-right { display: none; }
-      .node-row { flex-direction: column; align-items: stretch; }
-      .node-meta { width: 100%; }
-      .button-group { justify-content: flex-end; }
+    @keyframes statusPulse {
+      0% { opacity: 0.8; text-shadow: 0 0 8px rgba(0,229,255,0.5); }
+      100% { opacity: 1; text-shadow: 0 0 20px rgba(0,229,255,1); }
     }
   </style>
 </head>
 <body>
-
-  <div class="app-container">
-    
-    <!-- Top Header -->
-    <header class="header">
-      <div class="brand" onclick="switchTab('tab-home')">
-        <div class="brand-logo">
-          <i class="fa-solid fa-atom"></i>
-        </div>
-        <div class="brand-title">
-          <h2>Galaxy Tunnel</h2>
-          <p>VLESS Configuration</p>
-        </div>
-      </div>
-      <div class="status-badge">
-        <span class="status-dot"></span>
-        Active (${colo})
-      </div>
-    </header>
-
-    <!-- Top Navigation Tabs -->
-    <nav class="nav-bar">
-      <div class="nav-card active" id="btn-home" onclick="switchTab('tab-home')">
-        <i class="fa-solid fa-house-signal"></i>
-        <span>Galaxy Tunnel</span>
-      </div>
-
-      <div class="nav-card" id="btn-nodes" onclick="switchTab('tab-nodes')">
-        <i class="fa-solid fa-gear"></i>
-        <span>Node Configuration</span>
-      </div>
-
-      <div class="nav-card" id="btn-sub" onclick="switchTab('tab-sub')">
-        <i class="fa-solid fa-satellite-dish"></i>
-        <span>Subscription</span>
-      </div>
-
-      <div class="nav-card" id="btn-diag" onclick="switchTab('tab-diag')">
-        <i class="fa-solid fa-globe"></i>
-        <span>Diagnostics</span>
-      </div>
-
-      <div class="nav-card nav-exit" onclick="handleExit()">
-        <i class="fa-solid fa-power-off"></i>
-        <span>Exit</span>
-      </div>
-    </nav>
-
-    <!-- 1. GALAXY TUNNEL (HOME TAB) -->
-    <div id="tab-home" class="tab-panel active">
-      <div class="hero-card">
-        <div class="hero-left">
-          <h1>GALAXY-TUNNEL</h1>
-          <div class="sub-title">V L E S S &nbsp; C O N F I G</div>
-          <div class="tag-access">GALAXY VPROXY IP ACCESS</div>
-        </div>
-        
-        <div class="hero-right">
-          <svg viewBox="0 0 320 140" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <ellipse cx="170" cy="70" rx="125" ry="42" fill="none" stroke="#00d2ff" stroke-width="1.8" transform="rotate(-18 170 70)" />
-            <g stroke="#00e5ff" stroke-width="1.1" opacity="0.85">
-              <line x1="85" y1="58" x2="135" y2="45" /><line x1="135" y1="45" x2="180" y2="35" />
-              <line x1="180" y1="35" x2="245" y2="65" /><line x1="85" y1="58" x2="115" y2="88" />
-              <line x1="115" y1="88" x2="160" y2="70" /><line x1="160" y1="70" x2="205" y2="100" />
-            </g>
-            <g fill="#00e5ff">
-              <circle cx="85" cy="58" r="3.5" /><circle cx="135" cy="45" r="4.5" fill="#fff" />
-              <circle cx="180" cy="35" r="4" /><circle cx="245" cy="65" r="4.5" />
-              <circle cx="115" cy="88" r="3.5" fill="#fff" /><circle cx="160" cy="70" r="5.5" />
-            </g>
-          </svg>
-        </div>
-      </div>
-
-      <div class="home-stats-grid">
-        <div class="stat-card">
-          <h4>SERVING HOST</h4>
-          <p>${host}</p>
-        </div>
-        <div class="stat-card">
-          <h4>CLIENT REMOTE IP</h4>
-          <p>${clientIp}</p>
-        </div>
-        <div class="stat-card">
-          <h4>EDGE CLUSTER</h4>
-          <p style="color: #34d399;">${colo}</p>
-        </div>
+  <div class="space-bg"></div>
+  <div class="starfield"></div>
+  <div class="card-frame" id="mainCard">
+    <div class="graphic-container">
+      <div class="ring"></div>
+      <canvas id="nodeCanvas" width="230" height="230"></canvas>
+    </div>
+    <div class="content-bottom">
+      <h1 class="title">GALAXY-TUNNEL</h1>
+      <div class="subtitle">VLESS CONFIG</div>
+      <div class="access-badge">
+        GALAXY VPROXY<br>IS ACCESS
       </div>
     </div>
-
-    <!-- 2. NODE CONFIGURATION TAB -->
-    <div id="tab-nodes" class="tab-panel">
-      <div class="glass-container">
-        <div class="section-title-bar">
-          <div class="title-group">
-            <i class="fa-solid fa-rocket rocket-icon"></i>
-            <span>Tunnel Node Links</span>
-          </div>
-        </div>
-
-        <!-- Node 1: VLESS TLS -->
-        <div class="node-row">
-          <div class="node-meta">
-            <i class="fa-solid fa-lock node-meta-icon icon-cyan"></i>
-            <div class="node-meta-text">
-              <h3>VLESS TLS</h3>
-              <span>(Port 443 / Recommended)</span>
-            </div>
-          </div>
-          <div class="code-box" id="n1">${vlessTls}</div>
-          <div class="button-group">
-            <button class="btn-main" onclick="copyBox('n1')">Copy Link</button>
-            <button class="btn-arrow" onclick="copyBox('n1')"><i class="fa-solid fa-copy"></i></button>
-          </div>
-        </div>
-
-        <!-- Node 2: VLESS HTTP -->
-        <div class="node-row">
-          <div class="node-meta">
-            <i class="fa-solid fa-bolt node-meta-icon icon-yellow"></i>
-            <div class="node-meta-text">
-              <h3>VLESS HTTP</h3>
-              <span>(Port 8080)</span>
-            </div>
-          </div>
-          <div class="code-box" id="n2">${vlessHttp}</div>
-          <div class="button-group">
-            <button class="btn-main" onclick="copyBox('n2')">Copy Link</button>
-            <button class="btn-arrow" onclick="copyBox('n2')"><i class="fa-solid fa-copy"></i></button>
-          </div>
-        </div>
-
-        ${trojanTls ? `
-        <!-- Node 3: Trojan TLS -->
-        <div class="node-row">
-          <div class="node-meta">
-            <i class="fa-solid fa-shield-halved node-meta-icon icon-cyan"></i>
-            <div class="node-meta-text">
-              <h3>Trojan TLS</h3>
-              <span>(Port 443)</span>
-            </div>
-          </div>
-          <div class="code-box" id="n3">${trojanTls}</div>
-          <div class="button-group">
-            <button class="btn-main" onclick="copyBox('n3')">Copy Link</button>
-            <button class="btn-arrow" onclick="copyBox('n3')"><i class="fa-solid fa-copy"></i></button>
-          </div>
-        </div>` : ''}
-
-        <div class="compatibility">
-          <i class="fa-solid fa-circle-check"></i>
-          <span>Compatible with v2rayN, Sing-box, Clash Meta, NekoBox, Shadowrocket, and V2Ray clients.</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. SUBSCRIPTION TAB -->
-    <div id="tab-sub" class="tab-panel">
-      <div class="glass-container">
-        <div class="section-title-bar">
-          <div class="title-group">
-            <i class="fa-solid fa-satellite-dish rocket-icon" style="color: #a855f7;"></i>
-            <span>Subscription Management</span>
-          </div>
-        </div>
-
-        <div class="node-row">
-          <div class="node-meta">
-            <i class="fa-solid fa-link node-meta-icon icon-purple"></i>
-            <div class="node-meta-text">
-              <h3>Subscription URL</h3>
-              <span>Auto-Update Link</span>
-            </div>
-          </div>
-          <div class="code-box" id="sub1">${subUrl}</div>
-          <div class="button-group">
-            <button class="btn-main btn-single" onclick="copyBox('sub1')">Copy Sub Link</button>
-          </div>
-        </div>
-
-        <div class="compatibility" style="margin-top: 10px;">
-          <span>Import this Subscription URL directly into your client for automatic node updates.</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. DIAGNOSTICS TAB -->
-    <div id="tab-diag" class="tab-panel">
-      <div class="glass-container">
-        <div class="section-title-bar">
-          <div class="title-group">
-            <i class="fa-solid fa-gauge-high rocket-icon" style="color: #00d2ff;"></i>
-            <span>Network Diagnostics</span>
-          </div>
-          <button class="btn-ping" onclick="runPingTest()">Test Ping</button>
-        </div>
-
-        <div class="diag-item">
-          <div>
-            <strong>Edge Proxy Server Host</strong>
-            <p style="font-size: 0.8rem; color: var(--text-muted);">${host} (Port 443)</p>
-          </div>
-          <span id="ping-result" style="color: #34d399; font-weight: 700;">Ready to test</span>
-        </div>
-
-        <div class="diag-item">
-          <div>
-            <strong>WebSocket Protocol Path</strong>
-            <p style="font-size: 0.8rem; color: var(--text-muted);">/${wsPath}</p>
-          </div>
-          <span style="color: #34d399; font-weight: 700;">Active</span>
-        </div>
-
-        <div class="diag-item">
-          <div>
-            <strong>Edge Location Code</strong>
-            <p style="font-size: 0.8rem; color: var(--text-muted);">${colo}</p>
-          </div>
-          <span style="color: #00d2ff; font-weight: 700;">Operational</span>
-        </div>
-      </div>
-    </div>
-
   </div>
-
   <script>
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      const target = document.getElementById(tabId);
-      if (target) target.classList.add('active');
+    const canvas = document.getElementById('nodeCanvas');
+    const ctx = canvas.getContext('2d');
+    const numNodes = 32; const nodes = []; const radius = 75;
+    let angleX = 0.004; let angleY = 0.007;
 
-      document.querySelectorAll('.nav-bar .nav-card').forEach(b => b.classList.remove('active'));
-      if (tabId === 'tab-home') document.getElementById('btn-home').classList.add('active');
-      if (tabId === 'tab-nodes') document.getElementById('btn-nodes').classList.add('active');
-      if (tabId === 'tab-sub') document.getElementById('btn-sub').classList.add('active');
-      if (tabId === 'tab-diag') document.getElementById('btn-diag').classList.add('active');
-    }
-
-    function copyBox(id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      navigator.clipboard.writeText(el.innerText).then(() => {
-        alert("Copied config link to clipboard!");
+    for (let i = 0; i < numNodes; i++) {
+      let theta = Math.acos(Math.random() * 2 - 1);
+      let phi = Math.random() * Math.PI * 2;
+      nodes.push({
+        x: radius * Math.sin(theta) * Math.cos(phi),
+        y: radius * Math.sin(theta) * Math.sin(phi),
+        z: radius * Math.cos(theta)
       });
     }
 
-    async function runPingTest() {
-      const pingText = document.getElementById('ping-result');
-      pingText.innerText = "Testing...";
-      pingText.style.color = "#ffbb00";
-      const start = performance.now();
-      try {
-        await fetch('/health?t=' + Date.now(), { cache: 'no-store' });
-        const latency = Math.round(performance.now() - start);
-        pingText.innerText = latency + " ms (Healthy)";
-        pingText.style.color = "#34d399";
-      } catch (e) {
-        pingText.innerText = "OK (Simulated)";
-        pingText.style.color = "#34d399";
-      }
+    function rotateX(node, angle) {
+      let cos = Math.cos(angle); let sin = Math.sin(angle);
+      let y1 = node.y * cos - node.z * sin;
+      let z1 = node.z * cos + node.y * sin;
+      node.y = y1; node.z = z1;
     }
 
-    function handleExit() {
-      if (confirm("Disconnect and return to camouflage portal?")) {
-        window.location.href = "/api/logout";
-      }
+    function rotateY(node, angle) {
+      let cos = Math.cos(angle); let sin = Math.sin(angle);
+      let x1 = node.x * cos - node.z * sin;
+      let z1 = node.z * cos + node.x * sin;
+      node.x = x1; node.z = z1;
     }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      let cx = canvas.width / 2; let cy = canvas.height / 2;
+
+      nodes.forEach(node => {
+        rotateX(node, angleX);
+        rotateY(node, angleY);
+      });
+
+      ctx.strokeStyle = 'rgba(0, 220, 255, 0.35)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          let dist = Math.hypot(nodes[i].x - nodes[j].x, nodes[i].y - nodes[j].y, nodes[i].z - nodes[j].z);
+          if (dist < 60) {
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x + cx, nodes[i].y + cy);
+            ctx.lineTo(nodes[j].x + cx, nodes[j].y + cy);
+            ctx.stroke();
+          }
+        }
+      }
+
+      nodes.forEach(node => {
+        let size = (node.z + radius) / (2 * radius) * 3 + 2;
+        ctx.beginPath();
+        ctx.arc(node.x + cx, node.y + cy, size, 0, Math.PI * 2);
+        ctx.fillStyle = '#00f0ff';
+        ctx.shadowBlur = 8; ctx.shadowColor = '#00f0ff';
+        ctx.fill(); ctx.shadowBlur = 0;
+      });
+
+      requestAnimationFrame(draw);
+    }
+    draw();
   </script>
 </body>
 </html>`;
 }
 
+// 401 Unauthorized Step-by-Step Setup Page (Item 1)
 function getUnauthorizedPage() {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -1856,17 +1471,7 @@ const worker_default = {
 
     if (directUuidPath || hasAuthCookie) {
       logger.info("GALAXY_PAGE_SERVED");
-      const currentHost = request.headers.get("Host") || url.host;
-      const configs = generateVlessConfigs(currentHost, userID, configuredWsPath, proxyIP, trojanPassword);
-      return new Response(getGalaxyPage({
-        host: currentHost,
-        uuid: userID,
-        wsPath: configuredWsPath,
-        proxyIP: proxyIP,
-        configs: configs,
-        clientIp: clientIp,
-        colo: request.cf?.colo || "EDGE-GLOBAL"
-      }), {
+      return new Response(getGalaxyPage(), {
         status: 200,
         headers: getSecurityHeaders("text/html; charset=utf-8")
       });
